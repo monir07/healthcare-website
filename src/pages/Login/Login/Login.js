@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import useAuth from '../../../hooks/useAuth';
 import './Login.css'
 const Login = () => {
+    const [user, setUser] = useState({});
+    const [error, setError] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { signInUsingGoogle, signInUsingEmail, error } = useAuth();
+    const { signInUsingGoogle, signInUsingEmail } = useAuth();
+    const history = useHistory();
+    const location = useLocation();
+
+    const redirectUrl = location.state?.from || '/home';
 
     // email catch from user 
     const handleEmailChange = e => {
@@ -20,8 +26,24 @@ const Login = () => {
     // login with email and password
     const loginProcess = e => {
         e.preventDefault();
-        signInUsingEmail(email, password);
+        signInUsingEmail(email, password)
+            .then(result => {
+                setUser(user);
+                setError('');
+                history.push(redirectUrl)
+            })
+            .catch(error => {
+                setError(error.message);
+            })
 
+    }
+
+    // handle google sign in 
+    const handleGoogleSignIn = () => {
+        signInUsingGoogle()
+            .then(result => {
+                history.push(redirectUrl)
+            })
     }
 
     return (
@@ -39,7 +61,7 @@ const Login = () => {
                                 <div className="row mb-4 px-3">
                                     <h6 className="mb-0 mr-4 mt-2">Sign in with</h6>
                                     <div class="col-md-12 text-center">
-                                        <button type="button" onClick={signInUsingGoogle} className="btn">
+                                        <button type="button" onClick={handleGoogleSignIn} className="btn">
                                             <img className="img-fluid" src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png" alt="" />
                                         </button>
                                     </div>

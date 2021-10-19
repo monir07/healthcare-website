@@ -1,6 +1,7 @@
 // import { getAuth, signInWithEmailAndPassword, updateProfile } from '@firebase/auth';
+import { getAuth, sendEmailVerification, updateProfile } from '@firebase/auth';
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import './SignUp.css'
 const Login = () => {
@@ -9,7 +10,11 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const history = useHistory();
+    const location = useLocation();
 
+    const redirectUrl = location.state?.from || '/home';
+    const auth = getAuth();
     // user name catch from user 
     const handleNameChange = e => {
         setName(e.target.value);
@@ -36,7 +41,29 @@ const Login = () => {
             setError('Password Must contain 2 upper case');
             return;
         }
-        registerNewUser(email, password, name);
+        registerNewUser(email, password)
+            .then(result => {
+                setError('');
+                verifyEmail();
+                setUserName();
+                history.push(redirectUrl)
+            })
+    }
+
+    // update profile name
+    const setUserName = () => {
+        updateProfile(auth.currentUser, { displayName: name })
+            .then(() => {
+                // setUser(user);
+            })
+    }
+
+    // email verification
+    const verifyEmail = () => {
+        sendEmailVerification(auth.currentUser)
+            .then(() => {
+
+            })
     }
 
     return (
@@ -61,7 +88,6 @@ const Login = () => {
                                             <h6 className="mb-0 text-sm">Name</h6>
                                         </label>
                                         <input className="mb-4" onBlur={handleNameChange} type="text" placeholder="Enter your name" required />
-                                        {error}
                                     </div>
 
                                     {/* Email Input field  */}
@@ -73,9 +99,12 @@ const Login = () => {
                                     </div>
 
                                     {/* password input field  */}
-                                    <div className="row px-3"> <label className="mb-1">
-                                        <h6 className="mb-0 text-sm">Password</h6>
-                                    </label> <input onBlur={handlePasswordChange} type="password" name="password" placeholder="Enter password" required />
+                                    <div className="row px-3">
+                                        <label className="mb-1">
+                                            <h6 className="mb-0 text-sm">Password</h6>
+                                            <span className="text-danger">{error}</span>
+                                        </label>
+                                        <input onBlur={handlePasswordChange} type="password" name="password" placeholder="Enter password" required />
                                     </div>
 
                                     {/* signup button  */}
@@ -84,7 +113,10 @@ const Login = () => {
                                     </div>
 
                                     {/* Login Link  */}
-                                    <div className="row mb-4 px-3"> <small className="font-weight-bold">Don't have an account? <Link to="/login"><button type="button" className="btn btn-link">Login</button></Link> </small> </div>
+                                    <div className="row mb-4 px-3">
+                                        <small className="font-weight-bold">Don't have an account? <Link to="/login"><button type="button" className="btn btn-link">Login</button></Link>
+                                        </small>
+                                    </div>
                                 </div>
                             </form>
                         </div>
